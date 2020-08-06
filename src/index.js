@@ -3,6 +3,7 @@ const http = require('http')
 const express = require('express')
 const socketio = require('socket.io')
 const Filter = require('bad-words')
+const {generateMessage} = require('./utils/messages')
 
 const app = express()
 const server = http.createServer(app)
@@ -17,16 +18,15 @@ app.use(express.static(publicDirectoryPath))
 // SERVER (emit) -> CLIENT (receive) - acknowledgement -> SERVER
 // CLIENT (emit) -> SERVER (receive) - acknowledgement -> CLIENT
 
-const msg = 'Welcome!'
 
 io.on('connection', (socket) => {
     console.log('New WebSocket connection')
 
-    socket.emit('message', msg) // emits to particular socket
-    socket.broadcast.emit('message', 'A new user has joined') // emits to all except itself
+    socket.emit('message', generateMessage('Welcome!')) // emits to particular socket
+    socket.broadcast.emit('message', generateMessage('A new user has joined')) // emits to all except itself
 
     socket.on('message', () => {
-        io.emit('message', msg) // emits to all connected sockets
+        io.emit('message', generateMessage()) // emits to all connected sockets
     })
 
     socket.on('sendMessage', (message, callback) => {
@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
         if(filter.isProfane(message)){
             return callback('Profanity is not allowed')
         }
-        io.emit('message', message)
+        io.emit('message', generateMessage(message))
         callback()
     })
 
@@ -44,7 +44,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
-        io.emit('message', 'A user has left')
+        io.emit('message', generateMessage('A user has left'))
     })
 })
 
