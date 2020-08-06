@@ -21,14 +21,19 @@ const msg = 'Welcome!'
 io.on('connection', (socket) => {
     console.log('New WebSocket connection')
 
-    socket.emit('message', msg)
+    socket.emit('message', msg) // emits to particular socket
+    socket.broadcast.emit('message', 'A new user has joined') // emits to all except itself
 
     socket.on('message', () => {
-        io.emit('message', msg)
+        io.emit('message', msg) // emits to all connected sockets
     })
 
     socket.on('sendMessage', (message) => {
         io.emit('message', message)
+    })
+
+    socket.on('disconnect', () => {
+        io.emit('message', 'A user has left')
     })
 })
 
