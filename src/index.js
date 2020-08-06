@@ -22,11 +22,14 @@ app.use(express.static(publicDirectoryPath))
 io.on('connection', (socket) => {
     console.log('New WebSocket connection')
 
-    socket.emit('message', generateMessage('Welcome!')) // emits to particular socket
-    socket.broadcast.emit('message', generateMessage('A new user has joined')) // emits to all except itself
+    socket.on('join', ({ username, room }) => {
+        socket.join(room)
 
-    socket.on('message', () => {
-        io.emit('message', generateMessage()) // emits to all connected sockets
+        socket.emit('message', generateMessage('Welcome!'))
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`))
+
+        // socket.emit, io.emit, socket.broadcast.emit
+        // io.to.emit, socket.broadcast.to.emit
     })
 
     socket.on('sendMessage', (message, callback) => {
@@ -34,7 +37,7 @@ io.on('connection', (socket) => {
         if(filter.isProfane(message)){
             return callback('Profanity is not allowed')
         }
-        io.emit('message', generateMessage(message))
+        io.to().emit('message', generateMessage(message))
         callback()
     })
 
